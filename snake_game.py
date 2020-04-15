@@ -10,6 +10,10 @@ import numpy as np
 
 WIN_WIDTH = 800 
 WIN_HEIGHT = 600
+box_size = 25
+number_of_columns = int(WIN_WIDTH/box_size)
+number_of_rows = int(WIN_HEIGHT/box_size)
+
 
 screen = pygame.display.set_mode((WIN_WIDTH,WIN_HEIGHT)) # initialize the game screen
 pygame.display.set_caption("Snake Remake") # sets Game-Window Label
@@ -17,11 +21,16 @@ clock = pygame.time.Clock() # initalize the game clock
 
 play = True
 
-number_of_columns = 24
-number_of_rows = 18
+
 
 # creating gamefield matrix
 game_field = np.zeros((number_of_columns, number_of_rows))
+
+
+#def update_grid(screen,game_field):
+    
+
+
 
 while play:
     
