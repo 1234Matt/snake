@@ -19,6 +19,7 @@ white = (255, 255, 255)
 black = (0, 0, 0)
 
 
+
 screen = pygame.display.set_mode((WIN_WIDTH,WIN_HEIGHT)) # initialize the game screen
 pygame.display.set_caption("Snake Remake") # sets Game-Window Label
 clock = pygame.time.Clock() # initalize the game clock
@@ -31,11 +32,21 @@ play = True
 game_field = np.zeros((number_of_rows, number_of_columns))
 game_field[5][7]=1
 
+class Snake:
+    WHITE = (255, 255, 255)
 
+    def __init__(self):
+        snake_color = self.WHITE
+        snake_length = 1
+
+    def snake_head(self):
+        pass
+
+    def snake_tail(self):
+        pass
 
 #interates game_field matrix and updates screen according to values
 def update_grid(screen,game_field):
-    x = 0
     y = 0
     for row in game_field:
         x = 0
