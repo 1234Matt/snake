@@ -2,7 +2,7 @@
 """
 Created on Wed Apr 15 04:19:09 2020
 
-@author: Marius Neumann
+@author: 1234matt & mayor-slash
 """
 import pygame
 
@@ -26,6 +26,5 @@ while play:
                 play = False
                 pygame.quit()
                 break
-
 
 
