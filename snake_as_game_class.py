@@ -6,6 +6,7 @@ Created on Wed Apr 15 04:19:09 2020
 """
 import pygame
 import numpy as np
+import random
 
 
 WIN_WIDTH = 800 
@@ -31,13 +32,16 @@ play = True
 # dictonary to store the values which will be in the game_field matrix according to their color-string
 color_index = {"white" : 1,
           "black": 0,
-          "red": 2
+          "red": 2,
+          "green":3
+          
           }
 
 # dictonary to store the rgb tuples according to the values in the game_field matrix
 index_tuple = {1:(255, 255, 255),
                0:(0, 0, 0),
-               2:(255, 0, 0)
+               2:(255, 0, 0),
+               3:(0, 255, 0)
                }
 
 
@@ -57,6 +61,7 @@ class Game:
     def __init__(self):
         self.game_field = np.zeros((number_of_rows, number_of_columns))
         self.snake = Snake()
+        self.item = Item(self.snake.snake_position,self.snake.snake_body)
         
     #displays the current game_field onto the screen
     def update_grid(self,screen):
@@ -78,15 +83,49 @@ class Game:
         self.game_field = np.zeros((number_of_rows, number_of_columns))
         
         # moves the snake head
-        self.game_field = self.snake.move(time,self.game_field)
+        self.game_field,item_found = self.snake.move(time,self.game_field,self.item.position)
+        
+        #create new item if last was found
+        if item_found:
+            self.item = Item(self.snake.snake_position,self.snake.snake_body)
+        
+        #draw item onto game_field
+        self.draw_item()
         
         # displays the snake body (the places where the snake has been earliere)
         self.game_field = self.snake.pass_body(self.game_field)
         
         # draws everything
         self.update_grid(screen)
+        
+        
+        
+    def draw_item(self):
+        self.game_field[self.item.position[0]][self.item.position[1]]=self.item.color
 
 
+#creating class Item 
+class Item:
+    
+    def __init__(self,snake_position,snake_body):
+        found = False
+        while not found:
+            x = random.randint(0,number_of_rows-1)
+            y = random.randint(0,number_of_columns-1)
+            d = np.sqrt((x-snake_position[0])**2 + (y - snake_position[1])**2)
+            
+            if d>5:
+                overlapp = False
+                for bodypart in snake_body:
+                    if x == bodypart[0] and y==bodypart[1]:
+                        overlapp = True
+                if not overlapp:
+                    found = True
+        
+        self.position = np.array((x,y))
+        self.color = color_index["green"]
+        
+           
 
 
 #creating class Snake. The Snake obkject will be an attribut of the Game object
@@ -96,25 +135,33 @@ class Snake:
     def __init__(self,color_head="red",color_body ="white"):
         self.snake_color = color_index[color_head]  # color of the snake_head is standart red, but could be changed by calling Snake object with extra string arguments
         self.snake_length = 5  # starting length of snake, will later be increased by "eating" fruits
-        self.snake_direction = 1 # starting index in the directions_list
+        self.snake_direction = 0 # starting index in the directions_list
         self.snake_position = np.array((5, 7)) # starting position of the snake head as array so we can use vector additions later
         self.snake_body_color = color_index[color_body] # color of the snake_body is standart white, but could be changed by calling Snake object with extra string arguments
         self.snake_body = [] # empty list where the previous positions of the head and therefor the body is stored
+        self.dead = False
         
-    def move(self,time,game_field):
+    def move(self,time,game_field,item_position):
         # only moves snake head every 20 timesteps. Could definitly use a better solution here!
-        if time%20 ==0:  
-            #creates copy of snake_positions and appends that to body-list
+        item_found = False
+        if time%10 ==0:  
+            #creates copy of snake_positions 
             old = self.snake_position.copy()
-            self.snake_body.append(old)
+            
+            
             
             #changes snake_position depending to the current direction(vector addition)
             self.snake_position += directions[self.snake_direction]
             
+            #check for collisions
+            item_found = self.collision(item_position)
+            
+            self.snake_body.append(old)
+            
         #draws snake head reagardless of if it moved or not
         game_field[self.snake_position[0]][self.snake_position[1]]=self.snake_color
             
-        return game_field
+        return game_field,item_found
 
 
     
@@ -131,6 +178,38 @@ class Snake:
             #print(bodypart[1])
         return game_field
     
+    def collision(self,item_position):
+        x = self.snake_position[0]
+        y = self.snake_position[1]
+        item_found = False
+        #check for collision with itself
+        for bodypart in self.snake_body:
+            bodypart_x = bodypart[0]
+            bodypart_y = bodypart[1]
+            
+            if x==bodypart_x and y == bodypart_y:
+                print("collision with self")
+                self.dead = True
+                return item_found
+        
+        #check for collision with wall
+        
+        
+        if x<0 or x>number_of_rows-2 or y<0 or y>number_of_columns-2:
+            self.dead = True
+            print("collision with wall")
+            return item_found
+         
+        
+        #check for collection of item
+        if np.array_equal(self.snake_position,item_position):
+            self.snake_length +=1
+            item_found = True
+            
+        return item_found
+            
+        
+    
 
     
     
@@ -140,7 +219,7 @@ class Snake:
 #set time to zero and create new Game object with new snake
 time = 0
 game1 = Game()
-while play:
+while play and not game1.snake.dead:
     
     clock.tick(30) # Sets max frame-rate to 30
     time += 1 # increases timestep by 33.33 ms due to the frame_rate
@@ -164,3 +243,8 @@ while play:
     
     game1.play(screen)
 
+try:
+    pygame.quit()
+    
+except:
+    print("game over")
